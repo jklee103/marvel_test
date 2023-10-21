@@ -1,26 +1,34 @@
 package com.example.marvelapp.ui.character
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import com.example.marvelapp.R
 import com.example.marvelapp.databinding.FragmentSearchBinding
 import com.example.marvelapp.util.EndlessRVScrollListener
 import com.jakewharton.rxbinding3.widget.textChanges
+import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
+@AndroidEntryPoint
 class SearchFragment : Fragment() {
     lateinit var binding: FragmentSearchBinding
+
+    private val viewModel: CharacterViewModel by viewModels()
     private var hasNextData = true
     val compositeDisposable = CompositeDisposable()
     var currentText = ""
     lateinit var endlessRVScrollListener: EndlessRVScrollListener
+
+    private val rvAdapter by lazy { SearchRvAdapter{ Log.e("click search", "$it") } }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -31,13 +39,20 @@ class SearchFragment : Fragment() {
             object : EndlessRVScrollListener(binding.rvList.layoutManager!!, 6) {
                 override fun onLoadMore(page: Int) {
                     if (hasNextData) {
-                        getData()
+                        getData(currentText, page)
                     }
                 }
             }
         setRv()
         setViewAction()
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        with(binding) {
+            lifecycleOwner = viewLifecycleOwner
+        }
     }
 
     private fun setViewAction() {
@@ -48,7 +63,7 @@ class SearchFragment : Fragment() {
             .subscribe { charSequence ->
                 currentText = charSequence.toString()
                 activity?.runOnUiThread {
-                    //TODO rv clear
+                    rvAdapter.setClear()
                     endlessRVScrollListener.resetState()
                     if (currentText.length == 0) {
                         binding.tvEmptyMsg.visibility = View.GONE
@@ -56,15 +71,14 @@ class SearchFragment : Fragment() {
                         binding.tvEmptyMsg.visibility = View.VISIBLE
                     }
                 }
-                if (currentText.isNotEmpty()) {
-                } //TODO vm getData
+                if (currentText.isNotEmpty()) { getData(charSequence.toString(), 0) }
             }.addTo(compositeDisposable)
 
     }
 
     private fun setRv() {
         binding.rvList.run {
-            adapter = SearchRvAdapter()
+            adapter = rvAdapter
             layoutManager?.let {
                 addOnScrollListener(endlessRVScrollListener)
             }
@@ -72,11 +86,15 @@ class SearchFragment : Fragment() {
     }
 
     private fun setObserver() {
-
+        viewModel.characterData.observe(viewLifecycleOwner){
+            Log.e("character observe", "${it.hasNext}")
+            rvAdapter.setItems(it.data)
+            hasNextData = it.hasNext
+        }
     }
 
-    private fun getData() {
-        //TODO vm데이터
+    private fun getData(keyword: String, page: Int) {
+        viewModel.getCharacters(keyword, page)
     }
 
     companion object {

@@ -37,7 +37,7 @@ object NetworkModule {
     @Singleton
     @Provides
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        return Retrofit.Builder().baseUrl("http://gateway.marvel.com").client(okHttpClient)
+        return Retrofit.Builder().baseUrl("https://gateway.marvel.com").client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create()).build()
     }
 

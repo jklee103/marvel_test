@@ -1,18 +1,21 @@
 package com.example.marvelapp.ui.character
 
 import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.marvelapp.databinding.ItemRvCharacterBinding
 import com.example.marvelapp.domain.model.Character
 
-class SearchRvAdapter: RecyclerView.Adapter<SearchRvAdapter.CharacterVH>() {
+typealias OnRecyclerViewItemClick<T> = ((T) -> Unit)
+
+class SearchRvAdapter(private val onItemClick: OnRecyclerViewItemClick<Character>): RecyclerView.Adapter<SearchRvAdapter.CharacterVH>() {
     private val items: MutableList<Character> = mutableListOf()
-    fun setItems(items: List<Character>) {
+
+    fun setClear(){
         this.items.clear()
+        notifyDataSetChanged()
+    }
+    fun setItems(items: List<Character>) {
         this.items.addAll(items)
         notifyDataSetChanged()
     }
@@ -43,7 +46,9 @@ class SearchRvAdapter: RecyclerView.Adapter<SearchRvAdapter.CharacterVH>() {
 
         fun setClickEvent() {
             binding.root.setOnClickListener {
-                //TODO vm click
+                val currentItem =
+                    items.getOrNull(adapterPosition) ?: return@setOnClickListener
+                onItemClick.invoke((currentItem))
             }
         }
     }

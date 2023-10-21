@@ -7,5 +7,5 @@ class GetCharactersUseCase @Inject constructor(private val repository: Character
     fun invoke(
         keyword: String,
         offset: Int
-    ) = repository.getCharacters(keyword, 10, offset)
+    ) = repository.getCharacters(keyword, 10, offset*10)
 }
