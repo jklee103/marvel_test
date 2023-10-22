@@ -67,7 +67,7 @@ dependencies {
     implementation "com.google.dagger:hilt-android:2.44.2"
     kapt "com.google.dagger:hilt-android-compiler:2.44.2"
 
-    //Coroutines
+    // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
 
     // Activity
@@ -79,4 +79,6 @@ dependencies {
     // GLIDE
     implementation "com.github.bumptech.glide:glide:4.14.2"
     annotationProcessor "com.github.bumptech.glide:compiler:4.14.2"
+    // Pref
+    implementation 'com.pixplicity.easyprefs:EasyPrefs:1.10.0'
 }

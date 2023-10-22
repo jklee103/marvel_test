@@ -1,8 +1,13 @@
 package com.example.marvelapp.ui.character
 
+import android.graphics.Color
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.example.marvelapp.R
 import com.example.marvelapp.databinding.ItemRvCharacterBinding
 import com.example.marvelapp.domain.model.Character
 
@@ -10,6 +15,9 @@ typealias OnRecyclerViewItemClick<T> = ((T) -> Unit)
 
 class SearchRvAdapter(private val onItemClick: OnRecyclerViewItemClick<Character>): RecyclerView.Adapter<SearchRvAdapter.CharacterVH>() {
     private val items: MutableList<Character> = mutableListOf()
+    init {
+        setHasStableIds(true)
+    }
 
     fun setClear(){
         this.items.clear()
@@ -17,6 +25,10 @@ class SearchRvAdapter(private val onItemClick: OnRecyclerViewItemClick<Character
     }
     fun setItems(items: List<Character>) {
         this.items.addAll(items)
+        notifyDataSetChanged()
+    }
+    fun deleteItem(item: Character){
+        items.remove(item)
         notifyDataSetChanged()
     }
 
@@ -36,6 +48,14 @@ class SearchRvAdapter(private val onItemClick: OnRecyclerViewItemClick<Character
         holder.bind(items[position])
     }
 
+    override fun getItemViewType(position: Int): Int {
+        return position
+    }
+
+    override fun getItemId(position: Int): Long {
+        return items[position].id.toLong()
+    }
+
     override fun getItemCount() = items.size
     inner class CharacterVH(private var binding: ItemRvCharacterBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -48,6 +68,9 @@ class SearchRvAdapter(private val onItemClick: OnRecyclerViewItemClick<Character
             binding.root.setOnClickListener {
                 val currentItem =
                     items.getOrNull(adapterPosition) ?: return@setOnClickListener
+                if(binding.clBackground.background.constantState == ContextCompat.getDrawable(it.context, R.drawable.favorite_background)?.constantState)
+                     binding.clBackground.background = ContextCompat.getDrawable(it.context, R.drawable.default_background)
+                else binding.clBackground.background = ContextCompat.getDrawable(it.context, R.drawable.favorite_background)
                 onItemClick.invoke((currentItem))
             }
         }

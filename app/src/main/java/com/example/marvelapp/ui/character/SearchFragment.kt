@@ -11,7 +11,9 @@ import androidx.fragment.app.viewModels
 import com.example.marvelapp.R
 import com.example.marvelapp.databinding.FragmentSearchBinding
 import com.example.marvelapp.util.EndlessRVScrollListener
+import com.google.gson.Gson
 import com.jakewharton.rxbinding3.widget.textChanges
+import com.pixplicity.easyprefs.library.Prefs
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -28,7 +30,26 @@ class SearchFragment : Fragment() {
     var currentText = ""
     lateinit var endlessRVScrollListener: EndlessRVScrollListener
 
-    private val rvAdapter by lazy { SearchRvAdapter{ Log.e("click search", "$it") } }
+    private val rvAdapter by lazy {
+        SearchRvAdapter { character ->
+            if (character.isFavorite == true) {
+                val oldSet = Prefs.getStringSet(getString(R.string.pref_favorite_set), setOf())
+                val gson = Gson()
+                oldSet.remove(gson.toJson(character))
+            } else {
+                val oldSet = Prefs.getStringSet(getString(R.string.pref_favorite_set), setOf())
+                val gson = Gson()
+                oldSet.add(gson.toJson(character))
+                if (oldSet.size > 5) oldSet.remove(oldSet.first())
+                Prefs.putStringSet(getString(R.string.pref_favorite_set), oldSet)
+                Log.e(
+                    "favorite add",
+                    "${Prefs.getStringSet(getString(R.string.pref_favorite_set), setOf("123"))}"
+                )
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -71,14 +92,18 @@ class SearchFragment : Fragment() {
                         binding.tvEmptyMsg.visibility = View.VISIBLE
                     }
                 }
-                if (currentText.isNotEmpty()) { getData(charSequence.toString(), 0) }
+                if (currentText.isNotEmpty()) {
+                    getData(charSequence.toString(), 0)
+                }
             }.addTo(compositeDisposable)
 
     }
 
     private fun setRv() {
         binding.rvList.run {
-            adapter = rvAdapter
+            adapter = rvAdapter.also {
+                setItemViewCacheSize(500)
+            }
             layoutManager?.let {
                 addOnScrollListener(endlessRVScrollListener)
             }
@@ -86,8 +111,18 @@ class SearchFragment : Fragment() {
     }
 
     private fun setObserver() {
-        viewModel.characterData.observe(viewLifecycleOwner){
-            Log.e("character observe", "${it.hasNext}")
+        viewModel.characterData.observe(viewLifecycleOwner) {
+            if (it.data.isNotEmpty()) {
+                binding.tvEmptyMsg.visibility = View.GONE
+            } else {
+                binding.tvEmptyMsg.visibility = View.VISIBLE
+            }
+            it.data.forEach { character ->
+                val gson = Gson()
+                if (Prefs.getStringSet(getString(R.string.pref_favorite_set), setOf())
+                        .contains(gson.toJson(character))
+                ) character.isFavorite = true
+            }
             rvAdapter.setItems(it.data)
             hasNextData = it.hasNext
         }

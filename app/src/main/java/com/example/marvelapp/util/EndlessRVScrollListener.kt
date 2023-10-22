@@ -24,8 +24,6 @@ abstract class EndlessRVScrollListener(
     private var loading = true
     // Sets the starting page index
     private val startingPageIndex = 0
-    //custom progress check
-    var progressing = false
 
     override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
         super.onScrollStateChanged(recyclerView, newState)
@@ -59,7 +57,7 @@ abstract class EndlessRVScrollListener(
         // the visibleThreshold and need to reload more data.
         // If we do need to reload some more data, we execute onLoadMore to fetch the data.
         // threshold should reflect how many total columns there are too
-        if (!loading && lastVisibleItemPosition + visibleThreshold >= totalItemCount && !progressing) {
+        if (!loading && lastVisibleItemPosition + visibleThreshold >= totalItemCount) {
             currentPage++
             onLoadMore(currentPage)
             loading = true
@@ -71,7 +69,6 @@ abstract class EndlessRVScrollListener(
         this.currentPage = this.startingPageIndex
         this.previousTotalItemCount = 0
         this.loading = true
-        this.progressing = false
     }
 
     // Defines the process for actually loading more data based on page
